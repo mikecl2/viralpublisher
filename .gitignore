@@ -1,0 +1,17 @@
+# Local SQLite DB and its WAL/SHM sidecar files — never commit real data.
+# The container creates this fresh from lib/db.php's migrations; the
+# persistent Coolify volume is what actually keeps it around in production.
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
+!data/.gitkeep
+
+# OS/editor noise
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Never commit real secrets if a local .env is ever used for testing
+.env
+.env.local
