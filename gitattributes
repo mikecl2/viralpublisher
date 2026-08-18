@@ -1,0 +1,14 @@
+# .gitattributes
+# Forces LF line endings for files that get executed or parsed inside Linux
+# containers, regardless of what OS or editor touches them locally. Without
+# this, Windows editors/git configs can silently convert these to CRLF,
+# which is at minimum noisy (constant "LF to CRLF" warnings in GitHub Desktop)
+# and at worst can break shell line-continuations in RUN commands.
+
+Dockerfile text eol=lf
+*.php text eol=lf
+*.conf text eol=lf
+*.ini text eol=lf
+*.sh text eol=lf
+.dockerignore text eol=lf
+.gitignore text eol=lf
