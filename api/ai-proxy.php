@@ -28,40 +28,31 @@ function call_openrouter(string $model, array $messages, float $temperature = 0.
         throw new RuntimeException('OpenRouter API key not configured');
     }
 
-    $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => [
-            'Authorization: Bearer ' . OPENROUTER_KEY,
-            'Content-Type: application/json',
-            'HTTP-Referer: https://viralpublisher.com',
-            'X-Title: Viral Publisher',
-        ],
-        CURLOPT_POSTFIELDS => json_encode([
-            'model' => $model,
-            'messages' => $messages,
-            'temperature' => $temperature,
-            'max_tokens' => $maxTokens,
-            // Tells reasoning-capable models (DeepSeek-R1-style, etc.) to skip
-            // the visible "thinking out loud" phase and answer directly.
-            // Confirmed via OpenRouter's docs this is broadly supported, but
-            // NOTE: a small number of models mandate reasoning and will 400
-            // on this — that's an acceptable tradeoff here, since a model
-            // that can't ever produce a direct structured-JSON answer isn't
-            // a fit for these tools regardless, and the failure still surfaces
-            // as a normal, logged, caught exception rather than crashing.
-            'reasoning' => ['enabled' => false, 'exclude' => true],
-        ]),
-        CURLOPT_TIMEOUT => $timeoutSeconds,
-        CURLOPT_CONNECTTIMEOUT => 10,
-    ]);
+    $attempt = 0;
+    $maxAttempts = 2; // one retry, only for the specific case below
 
-    $response = curl_exec($ch);
-    $curlErrno = curl_errno($ch);
-    $curlError = curl_error($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    while (true) {
+        $attempt++;
+        [$curlErrno, $curlError, $httpCode, $response] = execute_openrouter_request(
+            $model, $messages, $temperature, $maxTokens, $timeoutSeconds
+        );
+
+        // Only retry on 429 (rate limited) — this fails FAST (no long hang),
+        // so a short backoff-and-retry fits comfortably within the existing
+        // timeout budget. Deliberately NOT applied to timeouts or other
+        // errors, where a retry could push a request past its PHP execution
+        // ceiling instead of just failing cleanly and quickly. Confirmed
+        // against a real recurring production failure: OpenRouter's free
+        // Google AI Studio pool returning 429 "temporarily rate-limited
+        // upstream" under shared-pool congestion.
+        if ($httpCode === 429 && $attempt < $maxAttempts) {
+            error_log("OpenRouter 429 rate-limited on attempt {$attempt}, retrying in 3s...");
+            sleep(3);
+            continue;
+        }
+
+        break;
+    }
 
     if ($curlErrno !== 0) {
         error_log("OpenRouter curl error ({$curlErrno}): {$curlError}");
@@ -82,4 +73,45 @@ function call_openrouter(string $model, array $messages, float $temperature = 0.
     }
 
     return $content;
+}
+
+/**
+ * The actual single HTTP call, factored out so call_openrouter() can retry
+ * it cleanly on a 429 without duplicating the curl setup. Returns
+ * [curlErrno, curlError, httpCode, rawResponse].
+ */
+function execute_openrouter_request(string $model, array $messages, float $temperature, int $maxTokens, int $timeoutSeconds): array {
+    $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . OPENROUTER_KEY,
+            'Content-Type: application/json',
+            'HTTP-Referer: https://viralpublisher.com',
+            'X-Title: Viral Publisher',
+        ],
+        CURLOPT_POSTFIELDS => json_encode([
+            'model' => $model,
+            'messages' => $messages,
+            'temperature' => $temperature,
+            'max_tokens' => $maxTokens,
+            // Tells reasoning-capable models (DeepSeek-R1-style, etc.) to skip
+            // the visible "thinking out loud" phase and answer directly.
+            // A small number of models mandate reasoning and will 400 on
+            // this — acceptable tradeoff, since that failure is still caught
+            // and logged cleanly like any other, not a crash.
+            'reasoning' => ['enabled' => false, 'exclude' => true],
+        ]),
+        CURLOPT_TIMEOUT => $timeoutSeconds,
+        CURLOPT_CONNECTTIMEOUT => 10,
+    ]);
+
+    $response = curl_exec($ch);
+    $curlErrno = curl_errno($ch);
+    $curlError = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return [$curlErrno, $curlError, $httpCode, $response];
 }
