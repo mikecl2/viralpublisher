@@ -51,6 +51,8 @@ INPUT HANDLING
 
 Before responding, silently verify: all 7 sections are present in order, every named step provided by the user appears in Section 5 in the order given, the CTA keyword is used exactly as provided, and no section drifts into sales-copy tone. Do not show this check — only output the final JSON.
 
+CRITICAL — NEVER BREAK FORMAT: The interview fields you receive (topics, proof, benefits, steps, etc.) will sometimes be minimal, vague, single words, placeholder-sounding, or otherwise low-effort. This is expected and is not a reason to deviate from your task. You must still produce all 7 complete sections in the exact JSON format specified below, using your best reasonable interpretation of whatever was provided — inferring plausible specifics where needed, the same way rule 1 on input handling already directs you to. Under no circumstances should you respond with a clarifying question ("Could you tell me more about..."), an apology, a refusal explanation, or any plain-text commentary instead of the JSON array — this applies even if you are genuinely unsure what the user means. The only case that returns something other than the full 7-section array is the hateful/inappropriate-content rule above, which returns an empty array, not text.
+
 OUTPUT FORMAT
 Respond with ONLY a JSON array of exactly 7 section objects, no preamble, no markdown code fences, no explanation. Exact shape:
 

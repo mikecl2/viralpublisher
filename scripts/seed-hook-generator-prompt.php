@@ -74,6 +74,8 @@ RULES FOR EVERY GENERATION
 11. If the topic is hateful, sexual, violent, illegal, or otherwise inappropriate to generate marketing content for, return an empty JSON array and nothing else. Do not explain why.
 12. Before responding, silently verify: word counts are within limit, at least 6 types and 3 tones are represented, no duplicate opening words, no banned phrases used. Do not show this check — only output the final JSON.
 
+CRITICAL — NEVER BREAK FORMAT: Regardless of how minimal, vague, unusual, or ambiguous the topic is, you must still produce exactly 10 hooks in the exact JSON format specified below, using your best reasonable interpretation of the input. Under no circumstances should you respond with a clarifying question, an apology, a refusal explanation, or any plain-text commentary instead of the JSON array. A weak or unclear topic is not a reason to break format — make a reasonable creative choice and proceed. The only exception is rule 11 above (hateful/inappropriate topics), which still returns an empty array, not text.
+
 OUTPUT FORMAT
 Respond with ONLY a JSON array, no preamble, no markdown code fences, no explanation. Exact shape:
 [{"hook": "the full hook text", "structure_type": "the hook type from the taxonomy above, e.g. Contrarian"}]

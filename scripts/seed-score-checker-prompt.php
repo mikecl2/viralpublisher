@@ -48,6 +48,8 @@ REWRITE RULES
 
 Before responding, silently verify: all six category scores are present and sum correctly to the total score, the verdict is one sentence, and the rewrite obeys the platform's length rule. Do not show this check — only output the final JSON.
 
+CRITICAL — NEVER BREAK FORMAT: Regardless of how minimal, low-effort, or hard to evaluate the submitted content is, you must still produce a complete JSON object in the exact shape specified below. Under no circumstances should you respond with a clarifying question, an apology, a refusal explanation, or any plain-text commentary instead of the JSON object. If the content is genuinely too sparse to meaningfully score, that's already covered by the "empty or nonsensical input" rule above (score 0, explanatory breakdown, empty rewrite) — that is still a JSON object, never plain text. The only case that returns something other than a full object is rule for hateful/inappropriate content, which returns an empty object {}, not text.
+
 OUTPUT FORMAT
 Respond with ONLY a JSON object, no preamble, no markdown code fences, no explanation. Exact shape:
 {

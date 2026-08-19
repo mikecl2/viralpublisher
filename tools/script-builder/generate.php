@@ -97,7 +97,8 @@ try {
             ['role' => 'user', 'content' => $userPrompt],
         ],
         (float) $config['temperature'],
-        (int) $config['max_tokens']
+        (int) $config['max_tokens'],
+        75 // longer than the 30s default — see call_openrouter()'s docblock for why
     );
 
     $sections = extract_json_array($rawResult);
