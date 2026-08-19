@@ -43,6 +43,15 @@ function call_openrouter(string $model, array $messages, float $temperature = 0.
             'messages' => $messages,
             'temperature' => $temperature,
             'max_tokens' => $maxTokens,
+            // Tells reasoning-capable models (DeepSeek-R1-style, etc.) to skip
+            // the visible "thinking out loud" phase and answer directly.
+            // Confirmed via OpenRouter's docs this is broadly supported, but
+            // NOTE: a small number of models mandate reasoning and will 400
+            // on this — that's an acceptable tradeoff here, since a model
+            // that can't ever produce a direct structured-JSON answer isn't
+            // a fit for these tools regardless, and the failure still surfaces
+            // as a normal, logged, caught exception rather than crashing.
+            'reasoning' => ['enabled' => false, 'exclude' => true],
         ]),
         CURLOPT_TIMEOUT => $timeoutSeconds,
         CURLOPT_CONNECTTIMEOUT => 10,
