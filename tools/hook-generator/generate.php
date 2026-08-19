@@ -65,7 +65,10 @@ try {
     $hooks = extract_json_array($rawResult);
 
     if (!$hooks || count($hooks) === 0) {
-        throw new RuntimeException('Model returned no parseable hooks');
+        $preview = 'length=' . strlen($rawResult)
+            . ' | head=' . substr($rawResult, 0, 150)
+            . ' | tail=' . substr($rawResult, -150);
+        throw new RuntimeException('Model returned no parseable hooks. ' . $preview);
     }
 
     $uuid = generate_uuid_v4();

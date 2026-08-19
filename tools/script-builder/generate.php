@@ -104,7 +104,15 @@ try {
     $sections = extract_json_array($rawResult);
 
     if (!$sections || count($sections) === 0) {
-        throw new RuntimeException('Model returned no parseable script sections');
+        // Log enough of the raw output to actually diagnose the failure next
+        // time this happens, rather than a generic message with no evidence.
+        // The tail is the most telling part: if it cuts off mid-string/mid-object
+        // instead of ending in "}]", that's truncation from hitting max_tokens,
+        // not the model breaking format — two very different fixes.
+        $preview = 'length=' . strlen($rawResult)
+            . ' | head=' . substr($rawResult, 0, 150)
+            . ' | tail=' . substr($rawResult, -150);
+        throw new RuntimeException('Model returned no parseable script sections. ' . $preview);
     }
 
     $uuid = generate_uuid_v4();

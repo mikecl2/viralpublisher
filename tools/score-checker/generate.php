@@ -62,7 +62,10 @@ try {
     $result = extract_json_object($rawResult);
 
     if (!$result || !isset($result['score'])) {
-        throw new RuntimeException('Model returned an unparseable score result');
+        $preview = 'length=' . strlen($rawResult)
+            . ' | head=' . substr($rawResult, 0, 150)
+            . ' | tail=' . substr($rawResult, -150);
+        throw new RuntimeException('Model returned an unparseable score result. ' . $preview);
     }
 
     $score = (int) $result['score'];
